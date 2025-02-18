@@ -126,7 +126,8 @@
     "forwardemail": "Forward Email",
     "resend": "Resend",
     "sendgrid": "Sendgrid",
-    "nodemailer": "Nodemailer"
+    "nodemailer": "Nodemailer",
+    "brevo": "Brevo"
   },
   "requiresIssuer": [
     "asgardeo",
