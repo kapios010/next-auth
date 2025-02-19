@@ -68,8 +68,8 @@ export default function Brevo(config: EmailUserConfig): EmailConfig {
             },
           ],
           subject: `Sign in to ${host}`,
-          html: html({ url, host, theme }),
-          text: text({ url, host }),
+          htmlContent: html({ url, host, theme }),
+          textContent: text({ url, host }),
         }),
       })
 
