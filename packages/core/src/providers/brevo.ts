@@ -1,6 +1,27 @@
 import type { EmailConfig, EmailUserConfig } from "./index.js"
+import type { Awaitable, Theme } from "../types.js"
 import { html, text } from "../lib/utils/email.js"
 import { AuthError } from "../errors.js"
+
+interface BrevoConfig
+  extends Omit<EmailConfig, "from" | "options" | "sendVerificationRequest"> {
+  from?: {
+    name?: string
+    email: string
+  }
+  sendVerificationRequest: (params: {
+    identifier: string
+    url: string
+    expires: Date
+    provider: BrevoConfig
+    token: string
+    theme: Theme
+    request: Request
+  }) => Awaitable<void>
+  options?: BrevoUserConfig
+}
+
+export type BrevoUserConfig = Omit<Partial<BrevoConfig>, "options" | "type">
 
 /**
  * Add Brevo login to your page.
@@ -17,7 +38,14 @@ import { AuthError } from "../errors.js"
  * // Add Brevo to your list of providers (SvelteKit shown here)
  * export const { handle, signIn, signOut } = SvelteKitAuth({
  *   adapter: YourAdapter(),
- *   providers: [Brevo],
+ *   providers: [Brevo({
+ *      apiKey: process.env.SOME_NAME // only if the environment variable isn't named AUTH_BREVO_KEY
+ *      from: {
+ *        email:"example@example.com"
+ *        name:"ACME"
+ *      }
+ *    })
+ *   ],
  * })
  * ```
  *
@@ -35,19 +63,19 @@ import { AuthError } from "../errors.js"
  *
  * :::
  */
-export default function Brevo(config: EmailUserConfig): EmailConfig {
+export default function Brevo(config: BrevoUserConfig): BrevoConfig {
   return {
     id: "brevo",
     type: "email",
     name: "Brevo",
-    from: "Auth.js <no-reply@authjs.dev>",
+    from: {
+      email: "no-reply@authjs.dev",
+    },
     maxAge: 24 * 60 * 60,
     async sendVerificationRequest(params) {
       const { identifier: to, provider, url, theme } = params
       const { host } = new URL(url)
-      const domain = provider.from?.split("@").at(1)
-
-      if (!domain) throw new Error("Invalid sender email")
+      if (!provider.from) throw new Error("Brevo error: Missing sender info")
       if (!provider.apiKey) throw new AuthError("Missing Brevo API key")
 
       const res = await fetch("https://api.brevo.com/v3/smtp/email", {
@@ -59,8 +87,8 @@ export default function Brevo(config: EmailUserConfig): EmailConfig {
         },
         body: JSON.stringify({
           sender: {
-            name: provider.name,
-            email: provider.from,
+            name: provider.from.name,
+            email: provider.from.email,
           },
           to: [
             {

@@ -74,8 +74,10 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
     }),
     GitHub,
     Brevo({
-      from: "example@example.com",
-      name: "ACME",
+      //this throws a 'not assignable' error for me and I'm not sure why since nodemailer doesn't
+      from: {
+        email: "a@b.c",
+      },
     }),
   ],
 
