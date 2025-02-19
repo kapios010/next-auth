@@ -2,6 +2,11 @@ import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import Keycloak from "next-auth/providers/keycloak"
 import GitHub from "next-auth/providers/github"
+import Brevo from "next-auth/providers/brevo"
+import { UnstorageAdapter } from "@auth/unstorage-adapter"
+import { createStorage } from "unstorage"
+
+const storage = createStorage()
 
 // import { PrismaClient } from "@prisma/client"
 // import { PrismaAdapter } from "@auth/prisma-adapter"
@@ -54,6 +59,7 @@ declare module "next-auth" {
 
 export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
   debug: true,
+  adapter: UnstorageAdapter(storage),
   providers: [
     Credentials({
       credentials: { password: { label: "Password", type: "password" } },
@@ -67,7 +73,10 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
       },
     }),
     GitHub,
-    Keycloak,
+    Brevo({
+      from: "example@example.com",
+      name: "ACME",
+    }),
   ],
 
   callbacks: {
